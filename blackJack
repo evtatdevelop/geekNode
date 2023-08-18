@@ -1,0 +1,78 @@
+const readline = require('readline');
+const rl = readline.Interface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+const casino = [];
+const player = [];
+const takenCards = new Set();
+
+const getNewCard = () => {
+  const cards = [2,3,4,5,6,7,8,9,10,'J','Q','K',"A"];
+  const cardSuits = ['S', 'C', 'D', 'H']; // ['spades', 'clubs', 'diamonds', 'hearts']
+  let newCard = null;
+  while ( !newCard || takenCards.has(newCard) ) newCard = `${cardSuits[Math.floor(Math.random() * 4)]}${cards[Math.floor(Math.random() * 13)]}`;
+  takenCards.add(newCard);
+  return newCard;
+}
+const getCardWeight = card => {
+  const jqka = {'J': 2, 'Q': 3, 'K': 4, 'A': 11};
+  const cardWeight = card.slice(1);
+  return !isNaN(cardWeight) ? +cardWeight : jqka[cardWeight];
+}
+const getCardSum = player => player.reduce((sum, cur) => sum = sum + getCardWeight(cur), 0)
+const bust = player => getCardSum(player) > 21
+const getWinner = () => {
+  const casinoRate = getCardSum(casino);
+  const playerRate = getCardSum(player);
+  console.log('\n');
+  console.log( casinoRate > playerRate ? `Casino winner` : casinoRate === playerRate ? 'Draw' : `You are a winner` );
+  console.log(`You: ${getCardSum(player)} | Casino:  ${getCardSum(casino)}`);
+  rl.close();
+}
+const showCards = player => { if ( player.length ) console.log(player); }
+
+let csinoInDeal = true;
+const casinoStep = () => {
+  csinoInDeal = csinoInDeal ? 21 >= getCardSum(casino) + Math.floor(Math.random() * 7) : csinoInDeal;
+  return csinoInDeal;
+}
+
+const casinoDeal = () => {
+  while ( casinoStep() ) {
+    casino.push( getNewCard() );
+    if ( bust(casino) ) console.log(`\nOverkill at the casino. You are a winner`);
+  }
+  return !bust(casino)
+}
+
+console.log('let\'s play.. [y/n]');
+
+rl.on('line', line => {
+  switch ( line ) {
+    case 'y': case 'Y':      
+      player.push( getNewCard() );
+      showCards(player);
+      if ( player.length ) console.log('More..? [y/n]');
+      if ( bust(player) ) {
+        console.log(`\nYou have too much. Casino winner`);
+        rl.close();
+        break;
+      }
+
+      if ( casinoStep() ) {
+        casino.push( getNewCard() );
+        if ( bust(casino) ) {
+          console.log(`\nOverkill at the casino. You are a winner`);
+          rl.close();
+        }        
+      }
+      break;
+
+    case 'n': case 'N':
+      if ( casinoDeal() ) getWinner();
+      rl.close();
+      break;
+  }
+});
