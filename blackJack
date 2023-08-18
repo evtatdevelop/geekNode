@@ -1,4 +1,6 @@
 const readline = require('readline');
+const cc = require("node-console-colors");
+
 const rl = readline.Interface({
   input: process.stdin,
   output: process.stdout
@@ -31,14 +33,21 @@ const getWinner = () => {
   console.log(`You: ${getCardSum(player)} | Casino:  ${getCardSum(casino)}`);
   rl.close();
 }
-const showCards = player => { if ( player.length ) console.log(player); }
+const showCards = player => { 
+  const color = {'S': 'fg_black', 'C': 'fg_black', 'D': 'fg_red', 'H': 'fg_red'};
+  const simbol = {'S': '♠', 'C': '♣', 'D': '♦', 'H': '♥'};
+  const cardSet = player.reduce((res, item) => res = `${res} ${cc.set(color[item[0]], "bg_dark_cyan", ' '+simbol[item[0]]+item.slice(1)+' ')}`, '');
+  const cardBody = player.reduce((res, item) => res = `${res} ${cc.set("fg_dark_cyan", "bg_dark_cyan", +item.slice(1)===10?'     ':'    ')}`, '');
+  console.log(cardBody);
+  console.log(cardSet);
+  console.log(cardBody);
+}
 
 let csinoInDeal = true;
 const casinoStep = () => {
   csinoInDeal = csinoInDeal ? 21 >= getCardSum(casino) + Math.floor(Math.random() * 7) : csinoInDeal;
   return csinoInDeal;
 }
-
 const casinoDeal = () => {
   while ( casinoStep() ) {
     casino.push( getNewCard() );
@@ -47,7 +56,7 @@ const casinoDeal = () => {
   return !bust(casino)
 }
 
-console.log('let\'s play.. [y/n]');
+console.log('let\'s play.. [y/n] ♣ ♠ ♥ ♦');
 
 rl.on('line', line => {
   switch ( line ) {
