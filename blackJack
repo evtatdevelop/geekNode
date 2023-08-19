@@ -1,5 +1,16 @@
 const readline = require('readline');
 const cc = require("node-console-colors");
+const fs = require('fs');
+
+const stat = winer => fs.exists('./blackJack.json', exists => {
+  if ( exists ) fs.readFile('./blackJack.json', (err, data) => {
+    const stat = JSON.parse(data);
+    stat[winer]++;
+    fs.writeFile('./blackJack.json', JSON.stringify(stat), (err) => {
+      if ( err ) console.error(err);
+    })
+  })
+})
 
 const rl = readline.Interface({
   input: process.stdin,
@@ -25,12 +36,24 @@ const getCardWeight = card => {
 }
 const getCardSum = player => player.reduce((sum, cur) => sum = sum + getCardWeight(cur), 0)
 const bust = player => getCardSum(player) > 21
+
 const getWinner = () => {
   const casinoRate = getCardSum(casino);
   const playerRate = getCardSum(player);
   console.log('\n');
-  console.log( casinoRate > playerRate ? `Casino winner` : casinoRate === playerRate ? 'Draw' : `You are a winner` );
-  console.log(`You: ${getCardSum(player)} | Casino:  ${getCardSum(casino)}`);
+  if ( casinoRate > playerRate ) {
+    console.log(`Casino winner`);
+    stat('casino')
+  } else if ( casinoRate === playerRate ) {
+    console.log(`Draw`);
+  } else {
+    console.log(`You are a winner`);
+    stat('player')
+  }
+  console.log(`You: ${getCardSum(player)}:`);
+  showCards(player)
+  console.log(`Casino:  ${getCardSum(casino)}:`);
+  showCards(casino)
   rl.close();
 }
 const showCards = player => { 
@@ -51,7 +74,10 @@ const casinoStep = () => {
 const casinoDeal = () => {
   while ( casinoStep() ) {
     casino.push( getNewCard() );
-    if ( bust(casino) ) console.log(`\nOverkill at the casino. You are a winner`);
+    if ( bust(casino) ) {
+      console.log(`\nOverkill at the casino. You are a winner`)
+      stat('player')
+    };
   }
   return !bust(casino)
 }
@@ -66,6 +92,7 @@ rl.on('line', line => {
       if ( player.length ) console.log('More..? [y/n]');
       if ( bust(player) ) {
         console.log(`\nYou have too much. Casino winner`);
+        stat('casino')
         rl.close();
         break;
       }
@@ -74,6 +101,7 @@ rl.on('line', line => {
         casino.push( getNewCard() );
         if ( bust(casino) ) {
           console.log(`\nOverkill at the casino. You are a winner`);
+          stat('player')
           rl.close();
         }        
       }
